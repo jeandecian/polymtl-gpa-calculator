@@ -46,3 +46,19 @@ gpa = round(sum_grade_points / sum_credit, 2)
 summary = {'Credits': [sum_credit], 'Grade Points':  [sum_grade_points], 'GPA': [gpa]}
 
 print(pd.DataFrame(data = summary))
+
+retake = df[['Code', 'Credit', 'Grade']].copy()
+grades = pd.DataFrame({'Expected': list(grade_values.keys())})
+
+retake['key'] = 0
+grades['key'] = 0
+
+retake = retake.merge(grades, how = 'left', on = 'key')
+retake.drop('key', 1, inplace = True)
+retake['Difference GPA'] = round(retake['Credit'] * (retake['Expected'].map(grade_values) - retake['Grade'].map(grade_values)) / sum_credit, 2)
+retake['New GPA'] = gpa + retake['Difference GPA']
+
+excluded_courses = ['INF1995', 'INF3005', 'INF3005A', 'INF3005I', 'INF3995', 'LOG2990']
+retake_mask = (retake['Difference GPA'] > 0) & ~retake['Code'].isin(excluded_courses) & ~retake['Expected'].isin(['A*'])
+
+print(retake[retake_mask].sort_values(by = ['New GPA'], ascending = False).to_string())
