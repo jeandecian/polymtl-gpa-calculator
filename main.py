@@ -59,6 +59,23 @@ retake['Difference GPA'] = round(retake['Credit'] * (retake['Expected'].map(grad
 retake['New GPA'] = gpa + retake['Difference GPA']
 
 excluded_courses = ['INF1995', 'INF3005', 'INF3005A', 'INF3005I', 'INF3995', 'LOG2990']
-retake_mask = (retake['Difference GPA'] > 0) & ~retake['Code'].isin(excluded_courses) & ~retake['Expected'].isin(['A*'])
+retake = retake[(retake['Difference GPA'] > 0) & ~retake['Code'].isin(excluded_courses) & ~retake['Expected'].isin(['A*'])]
 
-print(retake[retake_mask].sort_values(by = ['New GPA'], ascending = False).to_string())
+print(retake.sort_values(by = ['New GPA'], ascending = False).head(15))
+
+retake_one = retake.copy()
+retake_one.drop('New GPA', 1, inplace = True)
+retake_one = retake_one.rename(columns={'Code': 'Code 1', 'Credit': 'Credit 1', 'Grade': 'Grade 1', 'Expected': 'Expected 1', 'Difference GPA': 'Difference GPA 1'})
+
+retake_two = retake.copy()
+retake_two.drop('New GPA', 1, inplace = True)
+retake_two = retake_two.rename(columns={'Code': 'Code 2', 'Credit': 'Credit 2', 'Grade': 'Grade 2', 'Expected': 'Expected 2', 'Difference GPA': 'Difference GPA 2'})
+
+retake_one['key'] = 0
+retake_two['key'] = 0
+
+retake_new = retake_one.merge(retake_two, how = 'left', on = 'key')
+retake_new = retake_new[retake_new['Code 1'] < retake_new['Code 2']]
+retake_new['New GPA'] = gpa + retake_new['Difference GPA 1'] + retake_new['Difference GPA 2']
+
+print(retake_new.sort_values(by = ['New GPA'], ascending = False).head(15))
