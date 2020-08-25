@@ -88,3 +88,9 @@ retake_new = retake_new[retake_new['Code 1'] < retake_new['Code 2']]
 retake_new['New GPA'] = gpa + retake_new['Difference GPA 1'] + retake_new['Difference GPA 2']
 
 print(retake_new.sort_values(by = ['New GPA'], ascending = False).head(15))
+
+for grade in grade_values:
+    if grade not in ('P'):
+        expected_gpa = round((sum_grade_points + (120 - sum_credit) * grade_values[grade]) / (120 - (sum_credit - sum_credit_acquired)), 2)
+        gpa_comparison = "+" if expected_gpa > gpa else "-"
+        print("GPA if only " + grade + " : " + str(expected_gpa) + " (" + gpa_comparison + ")")
