@@ -14,6 +14,13 @@ def get_course_credit(course_code):
         print(course_code + ' doesn\'t exist. Please verify the entry or contact the developer.')
         return 9999
 
+def is_course_acquired(grade):
+    try:
+        return 0 if (grade == 'P') else 1
+    except:
+        print(grade + ' doesn\'t exist. Please verify the entry or contact the developer.')
+        return 0
+
 courses = {}
 
 for course in list(open("data/courses_credit.txt", "r")):
@@ -33,17 +40,19 @@ df = pd.read_csv('grade_report.csv')
 
 df['Title'] = df['Code'].apply(get_course_title)
 df['Credit'] = df['Code'].apply(get_course_credit)
+df['Credit Acquired'] = df['Credit'] * df['Grade'].apply(is_course_acquired)
 df['Value'] = df['Grade'].map(grade_values)
 df['Grade Points'] = df['Credit'] * df['Value']
 
-df = df[['Trimester', 'Code', 'Title', 'Credit', 'Grade', 'Value', 'Grade Points']]
+df = df[['Trimester', 'Code', 'Title', 'Credit', 'Credit Acquired', 'Grade', 'Value', 'Grade Points']]
 
 print(df.sort_values(by = ['Grade Points'], ascending = False))
 
 sum_credit = df['Credit'].sum()
+sum_credit_acquired = df['Credit Acquired'].sum()
 sum_grade_points = df['Grade Points'].sum()
-gpa = round(sum_grade_points / sum_credit, 2)
-summary = {'Credits': [sum_credit], 'Grade Points':  [sum_grade_points], 'GPA': [gpa]}
+gpa = round(sum_grade_points / sum_credit_acquired, 2)
+summary = {'Credits': [sum_credit], 'Credits Acquired': [sum_credit_acquired], 'Grade Points':  [sum_grade_points], 'GPA': [gpa]}
 
 print(pd.DataFrame(data = summary))
 
@@ -55,10 +64,10 @@ grades['key'] = 0
 
 retake = retake.merge(grades, how = 'left', on = 'key')
 retake.drop('key', 1, inplace = True)
-retake['Difference GPA'] = round(retake['Credit'] * (retake['Expected'].map(grade_values) - retake['Grade'].map(grade_values)) / sum_credit, 2)
+retake['Difference GPA'] = round(retake['Credit'] * (retake['Expected'].map(grade_values) - retake['Grade'].map(grade_values)) / sum_credit_acquired, 2)
 retake['New GPA'] = gpa + retake['Difference GPA']
 
-excluded_courses = ['INF1995', 'INF3005', 'INF3005A', 'INF3005I', 'INF3995', 'LOG2990']
+excluded_courses = ['INF1995', 'INF3005', 'INF3005A', 'INF3005I', 'INF3995', 'LOG2990', 'INF3995']
 retake = retake[(retake['Difference GPA'] > 0) & ~retake['Code'].isin(excluded_courses) & ~retake['Expected'].isin(['A*'])]
 
 print(retake.sort_values(by = ['New GPA'], ascending = False).head(15))
