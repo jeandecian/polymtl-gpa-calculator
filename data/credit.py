@@ -23,12 +23,26 @@ def get_credits(course_code):
 
     return credit
 
-with open("courses_credit.txt", "w") as courses_credit_file:
-    for course in list(open("courses.txt", "r")):
-        course_arr = course.split(" ", 1)
-        course_arr.insert(1, get_credits(course_arr[0]))
-        print(course_arr)
-        courses_credit_file.write(" ".join(course_arr))
+courses = {}
 
-    for course in list(open("old_courses.txt", "r")):
-        courses_credit_file.write(course)
+for course in list(open("courses_credit.txt", "r")):
+    course_arr = course.split(" ", 2)
+    courses[course_arr[0]] = {
+        'title': course_arr[2].rstrip(),
+        'credit': int(course_arr[1].rstrip())
+    }
+
+for course in list(open("courses.txt", "r")):
+    course_arr = course.split(" ", 1)
+    code = course_arr[0]
+    if code not in courses:
+        courses[code] = {
+            'title': course_arr[1].rstrip(),
+            'credit': int(get_credits(code).rstrip())
+        }
+        print(course_arr)
+
+with open("courses_credit.txt", "w") as courses_credit_file:
+    for code in sorted(courses):
+        course = courses[code]
+        courses_credit_file.write(code + " " + str(course['credit']) + " " + course['title'] + "\n")
